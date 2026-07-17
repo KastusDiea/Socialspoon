@@ -1,4 +1,5 @@
 import dataservice;
+import dataTransformService;
 
 public class apiservice{
   private CreatorName creatorname;
@@ -11,5 +12,9 @@ public class apiservice{
       //build QueryResult from CreatorData object
     //filter Queryresult with filter()
     //return QueryResult
+  }
+
+  public QueryResult filter(CreatorData){
+    return dataTransformService.filter(CreatorData);
   }
 }
