@@ -8,7 +8,7 @@ public class dataservice{
 
   public void deleteAllData(){}
 
-  public 
+  public CreatorData getIntel(){}
 
 
 }
