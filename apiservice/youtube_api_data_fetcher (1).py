@@ -19,7 +19,7 @@ import time               # This imports Python’s built-in 'time' module.
                          # It allows you to pause or delay the execution of your code.
                          # Useful when you want to avoid overwhelming the API by sending too many requests too quickly (called “rate limiting”).
 
-API_KEY = "AIzaSyBTzRCR3fUIe4ktLg2qgvh87K4YeAEAd10"  # Your personal YouTube Data API key used to authenticate requests
+API_KEY = ""  # Your personal YouTube Data API key used to authenticate requests
 CHANEL_ID = "UCIvFU5ctIISwVQzsXE7__lw"              # The unique ID of the YouTube channel you want to get videos from
 
 # Import the requests library to make HTTP requests
