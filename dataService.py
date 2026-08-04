@@ -12,12 +12,6 @@ class CreatorData:
         return len(self.videos)
 
 
-class CreatorName:
-    def __init__(self, name):
-        self.name = name
-
-    def get_name(self):
-        return self.name
 
 
 class Platform:
