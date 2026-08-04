@@ -1,6 +1,7 @@
 class CreatorData:
-    def __init__(self, name, subscribers=0, videos=None):
+    def __init__(self, name, platform, subscribers=0, videos=None):
         self.name = name
+        self.platform = platform
         self.subscribers = subscribers
         self.videos = videos if videos else []
 
