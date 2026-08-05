@@ -32,7 +32,7 @@ def main():
     # ----------------------------
     creator_input = input("Enter a YouTube creator: ").strip()
 
-    creator = CreatorName(creator_input)
+    creator = Creator(creator_input).getName()
 
     print("\nSearching YouTube...\n")
 
