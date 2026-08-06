@@ -1,7 +1,7 @@
 import requests
 import time
 
-from dataservice import CreatorData, CreatorName, Platform, Video
+from DataService import *
 
 class ApiService:
 

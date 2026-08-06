@@ -1,7 +1,7 @@
-from dataservice import dataService, Platform, CreatorName
-from apiService import ApiService
-from csvExporter import CSVExporter
-from uiService import UIService
+from DataService import *
+from ApiService import *
+from CSVExportService import *
+from UiService import *
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
     # ----------------------------
     creator_input = input("Enter a YouTube creator: ").strip()
 
-    creator = Creator(creator_input).getName()
+    creator = CreatorData(creator_input, youtube.get_name())
 
     print("\nSearching YouTube...\n")
 

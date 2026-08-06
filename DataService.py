@@ -10,6 +10,9 @@ class CreatorData:
 
     def get_video_count(self):
         return len(self.videos)
+    
+    def get_name(self):
+        return self.name
 
 
 
