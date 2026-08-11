@@ -2,7 +2,7 @@
 import DbPullService as db
 class DataTransformService:
 
-  def filter(self, **kwargs, _db):
+    def filter(self,_db, **kwargs):
         """
         Example:
             filter(Platform="YouTube")
@@ -10,7 +10,7 @@ class DataTransformService:
             filter(Subscribers=1000000)
         """
 
-        df = ui.get_table()
+        df = _db.get_table()
 
         for column, value in kwargs.items():
             if column not in df.columns:
@@ -21,14 +21,14 @@ class DataTransformService:
         return df
 
 
-    def sort(self, by, ascending=False, _db):
+    def sort(self,_db, by, ascending=False):
         """
         Example:
             sort("Views")
             sort("Subscribers")
         """
 
-        df = db.get_table()
+        df = _db.get_table()
 
         if by not in df.columns:
             raise ValueError(f"'{by}' is not possible to sort")

@@ -62,7 +62,7 @@ def main():
     # Display data
     # ----------------------------
     ui = UIService(database.creator_database)
-    dTrans = DataTransformService(database.creator_database)
+    dTrans = DataTransformService()
     dPull = DbPullService(database.creator_database)
 
     print("========== DATABASE ==========\n")
