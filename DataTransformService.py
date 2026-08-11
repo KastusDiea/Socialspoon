@@ -28,7 +28,7 @@ class DataTransformService:
             sort("Subscribers")
         """
 
-        df = self.get_table()
+        df = ui.get_table()
 
         if by not in df.columns:
             raise ValueError(f"'{by}' is not possible to sort")
