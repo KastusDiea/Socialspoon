@@ -1,3 +1,4 @@
+import pandas as pd
 class DbPullService:
 
     def __init__(self, creator_database):
