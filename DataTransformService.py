@@ -1,8 +1,8 @@
 #Hier kommen die lustigen filter rein afaik
-import UIService as ui
+import DbPullService as db
 class DataTransformService:
 
-  def filter(self, **kwargs):
+  def filter(self, **kwargs, _db):
         """
         Example:
             filter(Platform="YouTube")
@@ -21,14 +21,14 @@ class DataTransformService:
         return df
 
 
-    def sort(self, by, ascending=False):
+    def sort(self, by, ascending=False, _db):
         """
         Example:
             sort("Views")
             sort("Subscribers")
         """
 
-        df = ui.get_table()
+        df = db.get_table()
 
         if by not in df.columns:
             raise ValueError(f"'{by}' is not possible to sort")
