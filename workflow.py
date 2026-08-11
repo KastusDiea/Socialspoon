@@ -2,6 +2,8 @@ from DataService import *
 from ApiService import *
 from CSVExportService import *
 from UiService import *
+from DbPullService import *
+from DataTransformService import *
 
 
 def main():
@@ -60,6 +62,8 @@ def main():
     # Display data
     # ----------------------------
     ui = UIService(database.creator_database)
+    dTrans = DataTransformService(database.creator_database)
+    dPull = DbPullService(database.creator_database)
 
     print("========== DATABASE ==========\n")
     ui.display()
@@ -83,7 +87,7 @@ def main():
         value = input("Value: ")
 
         try:
-            result = ui.filter(**{column: value})
+            result = dTrans.filter(**{column: value}, dPull)
             print(result)
 
         except Exception as e:
