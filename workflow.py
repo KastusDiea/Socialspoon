@@ -87,7 +87,7 @@ def main():
         value = input("Value: ")
 
         try:
-            result = dTrans.filter(**{column: value}, dPull)
+            result = dTrans.filter(dPull, **{column: value})
             print(result)
 
         except Exception as e:
