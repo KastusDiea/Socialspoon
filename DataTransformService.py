@@ -1,34 +1,37 @@
 #Hier kommen die lustigen filter rein afaik
-public class DataTransformService()
-  def get_table(self):
+import UIService as ui
+class DataTransformService:
 
-        rows = []
+  def filter(self, **kwargs):
+        """
+        Example:
+            filter(Platform="YouTube")
+            filter(Creator="MrBeast")
+            filter(Subscribers=1000000)
+        """
 
-        for creator in self.creator_database:
+        df = ui.get_table()
 
-            platform = creator.platform.get_name()
+        for column, value in kwargs.items():
+            if column not in df.columns:
+                raise ValueError(f"'{column}' is not in the Database.")
 
-            if len(creator.videos) == 0:
-                rows.append({
-                    "Platform": platform,
-                    "Creator": creator.name,
-                    "Subscribers": creator.subscribers,
-                    "Title": "",
-                    "Views": None,
-                    "Likes": None,
-                    "Upload Date": ""
-                })
+            df = df[df[column] == value]
 
-            else:
-                for video in creator.videos:
-                    rows.append({
-                        "Platform": platform,
-                        "Creator": creator.name,
-                        "Subscribers": creator.subscribers,
-                        "Title": video.title,
-                        "Views": video.views,
-                        "Likes": video.likes,
-                        "Upload Date": video.upload_date
-                    })
+        return df
 
-        return pd.DataFrame(rows)
+
+    def sort(self, by, ascending=False):
+        """
+        Example:
+            sort("Views")
+            sort("Subscribers")
+        """
+
+        df = self.get_table()
+
+        if by not in df.columns:
+            raise ValueError(f"'{by}' is not possible to sort")
+
+        return df.sort_values(by=by, ascending=ascending)
+
