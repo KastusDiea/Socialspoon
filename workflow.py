@@ -23,11 +23,18 @@ def main():
     # Create services
     # ----------------------------
     database = dataService()
-
     api = ApiService()
-    #api.set_yt_api_key(api_key)
+    exporter = CSVExporter("creator_data.csv")
 
-    #exporter = CSVExporter("creator_data.csv")
+    # If a local CSV exists, load it into the in-memory database first
+    existing = exporter.load_creator_database()
+    if existing:
+        for c in existing:
+            try:
+                database.createCreatorData(c)
+            except Exception:
+                # fallback: append directly
+                database.creator_database.append(c)
 
     # ----------------------------
     # Ask for creator
@@ -66,7 +73,7 @@ def main():
     dPull = DbPullService(database.creator_database)
 
     print("========== DATABASE ==========\n")
-    ui.display()
+    ui.display(api)
 
 
 

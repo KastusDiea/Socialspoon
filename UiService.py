@@ -42,9 +42,7 @@ class UIService:
         return pd.DataFrame(rows)
 
 
-    def display(self):
-        api_service = None
-        table_rows = self.get_table().to_dict(orient="records")
-        uic = CreatorIntelligence(table_rows, api_service)
+    def display(self, api_service):
+        uic = CreatorIntelligence(self.creator_database, api_service)
         uic.run()
 
