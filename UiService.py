@@ -1,4 +1,5 @@
 import pandas as pd
+from CreatorIntelligenceUI import CreatorIntelligence
 
 
 class UIService:
@@ -42,7 +43,8 @@ class UIService:
 
 
     def display(self):
-        """
-        Prints the entire table.
-        """
-        print(self.get_table())
+        api_service = None
+        table_rows = self.get_table().to_dict(orient="records")
+        uic = CreatorIntelligence(table_rows, api_service)
+        uic.run()
+
