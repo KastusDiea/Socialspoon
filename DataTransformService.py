@@ -25,7 +25,13 @@ class DataTransformService:
             if column not in df.columns:
                 raise ValueError(f"'{column}' is not in the Database.")
 
-            df = df[df[column] == value]
+            if isinstance(value, (list, tuple, set, pd.Index)):
+                df = df[df[column].isin(value)]
+            elif isinstance(value, str):
+                values = df[column].astype(str)
+                df = df[values.str.contains(value, case=False, na=False)]
+            else:
+                df = df[df[column] == value]
 
         return df
 

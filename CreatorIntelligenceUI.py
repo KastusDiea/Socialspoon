@@ -10,7 +10,18 @@ class CreatorIntelligence:
         self.api = api_service
         self.transform = transform or DataTransformService()
         self.exporter = exporter
-        self.root = tk.Tk(); self.root.title("Creator Intelligence System"); self.root.geometry("1200x700")
+        self.root = None
+        self.table = None
+        self.status = None
+        try:
+            self.root = tk.Tk()
+            self.root.title("Creator Intelligence System")
+            self.root.geometry("1200x700")
+        except (tk.TclError, RuntimeError):
+            self.root = None
+            self.records = []
+            return
+
         self.api_key = tk.StringVar(); self.keyword = tk.StringVar(); self.youtube = tk.BooleanVar(value=True); self.instagram = tk.BooleanVar(value=True); self.tiktok = tk.BooleanVar(value=True)
         self.sort_column = None; self.sort_reverse = False
         self.columns = ["Platform","Creator","Subscribers","Title","Views","Likes","Upload Date"]
@@ -55,6 +66,8 @@ class CreatorIntelligence:
 
     
     def display(self,records):
+        if self.root is None or self.table is None or self.status is None:
+            return
         for i in self.table.get_children(): self.table.delete(i)
         for r in records: self.table.insert('', 'end', values=[r.get(c,'') for c in self.columns])
         self.status.config(text=f"{len(records)} rows")
@@ -62,13 +75,18 @@ class CreatorIntelligence:
 
 
     def filter(self):
+        if self.root is None:
+            return
         dfobj=self._to_dataframe(); allowed=[]
         if self.youtube.get(): allowed.append('YouTube')
         if self.instagram.get(): allowed.append('Instagram')
         if self.tiktok.get(): allowed.append('TikTok')
-        df = self.transform.filter(dfobj, Platform=allowed[0]) if len(allowed)==1 else dfobj
+        if allowed:
+            df = self.transform.filter(dfobj, Platform=allowed)
+        else:
+            df = dfobj
         kw=self.keyword.get().strip()
-        if kw: df = self.transform.filter(df, Creator=kw)  # TODO: DataTransformService should support contains
+        if kw: df = self.transform.filter(df, Creator=kw)
         records = df.to_dict(orient='records')
         self.records=records; self.display(records)
 
@@ -117,4 +135,6 @@ class CreatorIntelligence:
 
 
     def run(self): 
+        if self.root is None:
+            return
         self.root.mainloop()
