@@ -27,7 +27,8 @@ def main():
     exporter = CSVExporter("creator_data.csv")
 
     # If a local CSV exists, load it into the in-memory database first
-    existing = exporter.load_creator_database()
+    db_pull = DbPullService("creator_data.csv")
+    existing = db_pull.pull_saved_data()
     if existing:
         for c in existing:
             try:
@@ -70,7 +71,6 @@ def main():
     # ----------------------------
     ui = UIService(database.creator_database)
     dTrans = DataTransformService()
-    dPull = DbPullService(database.creator_database)
 
     print("========== DATABASE ==========\n")
     ui.display(api)
