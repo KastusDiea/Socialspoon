@@ -1,6 +1,8 @@
 import tkinter
+import tempfile
 import unittest
 from unittest.mock import patch
+from pathlib import Path
 
 import pandas as pd
 
@@ -62,21 +64,30 @@ class TestCreatorApp(unittest.TestCase):
                 self.asserted = (platform.get_name(), creator.get_name())
                 return CreatorData(creator.get_name(), platform, subscribers=999, videos=[Video("Sample", 100, 10, "2026-09-01")])
 
-        creator_db = []
-        app = CreatorIntelligence(creator_db, api_service=FakeAPI())
-        app.root = None
-        app.status = None
-        app.table = None
-        app.records = []
+        with tempfile.TemporaryDirectory() as directory:
+            creator_db = []
+            db_pull = DbPullService(Path(directory) / "creator_data.csv")
+            app = CreatorIntelligence(
+                creator_db,
+                api_service=FakeAPI(),
+                db_pull_service=db_pull,
+            )
+            app.root = None
+            app.status = None
+            app.table = None
+            app.records = []
 
-        app.api_key.set("abc123")
-        app.creator_name.set("DemoCreator")
+            app.api_key.set("abc123")
+            app.creator_name.set("DemoCreator")
 
-        app.load_creator_data()
+            app.load_creator_data()
+
+            saved = db_pull.pull_saved_data()
 
         self.assertEqual(len(creator_db), 1)
         self.assertEqual(creator_db[0].name, "DemoCreator")
         self.assertEqual(creator_db[0].videos[0].title, "Sample")
+        self.assertEqual(saved[0].videos[0].title, "Sample")
 
 
 if __name__ == "__main__":

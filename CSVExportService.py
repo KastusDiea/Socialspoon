@@ -1,6 +1,15 @@
 import csv
 
 
+def _parse_int(value):
+    if value in (None, ""):
+        return 0
+    try:
+        return int(str(value).replace(",", ""))
+    except (TypeError, ValueError):
+        return 0
+
+
 class CSVExporter:
 
     def __init__(self, filename="creator_data.csv"):
@@ -50,8 +59,6 @@ class CSVExporter:
                             video.upload_date
                         ])
 
-        print(f"Saved creator data to {self.filename}")
-
     def load_creator_database(self, filename=None):
         """Load creator data from a CSV and return a list of CreatorData objects.
 
@@ -75,32 +82,28 @@ class CSVExporter:
 
                     key = (creator_name, platform_name)
                     if key not in creators:
-                        # Try to construct a Platform; fall back to a lightweight stub if invalid
                         try:
                             plat = Platform(platform_name, "")
-                        except Exception:
+                        except ValueError:
                             class _P:
                                 def __init__(self, name): self._name = name
                                 def get_name(self): return self._name
                             plat = _P(platform_name)
 
-                        try:
-                            subs_val = int(str(subs).replace(',', '')) if subs not in (None, '') else 0
-                        except Exception:
-                            subs_val = subs
-
-                        creators[key] = CreatorData(creator_name, plat, subscribers=subs_val, videos=[])
+                        creators[key] = CreatorData(
+                            creator_name,
+                            plat,
+                            subscribers=_parse_int(subs),
+                            videos=[],
+                        )
 
                     if title:
-                        try:
-                            v_views = int(str(views).replace(',', '')) if views not in (None, '') else 0
-                        except Exception:
-                            v_views = 0
-                        try:
-                            v_likes = int(str(likes).replace(',', '')) if likes not in (None, '') else 0
-                        except Exception:
-                            v_likes = 0
-                        video = Video(title, views=v_views, likes=v_likes, upload_date=upload)
+                        video = Video(
+                            title,
+                            views=_parse_int(views),
+                            likes=_parse_int(likes),
+                            upload_date=upload,
+                        )
                         creators[key].videos.append(video)
         except FileNotFoundError:
             return []

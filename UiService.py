@@ -1,5 +1,4 @@
-import pandas as pd
-from CreatorIntelligenceUI import CreatorIntelligence
+from CreatorTableService import creators_to_dataframe
 
 
 class UIService:
@@ -9,40 +8,12 @@ class UIService:
 
 
     def get_table(self):
-
-        rows = []
-
-        for creator in self.creator_database:
-
-            platform = creator.platform.get_name()
-
-            if len(creator.videos) == 0:
-                rows.append({
-                    "Platform": platform,
-                    "Creator": creator.name,
-                    "Subscribers": creator.subscribers,
-                    "Title": "",
-                    "Views": None,
-                    "Likes": None,
-                    "Upload Date": ""
-                })
-
-            else:
-                for video in creator.videos:
-                    rows.append({
-                        "Platform": platform,
-                        "Creator": creator.name,
-                        "Subscribers": creator.subscribers,
-                        "Title": video.title,
-                        "Views": video.views,
-                        "Likes": video.likes,
-                        "Upload Date": video.upload_date
-                    })
-
-        return pd.DataFrame(rows)
+        return creators_to_dataframe(self.creator_database)
 
 
     def display(self, api_service):
+        from CreatorIntelligenceUI import CreatorIntelligence
+
         uic = CreatorIntelligence(self.creator_database, api_service)
         uic.run()
 

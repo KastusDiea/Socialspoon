@@ -1,17 +1,15 @@
-#Hier kommen die lustigen filter rein afaik
-import DbPullService as db
 import pandas as pd
 
 class DataTransformService:
 
-    def _as_df(self, src):
-        if hasattr(src, 'get_table'):
-            return src.get_table()
-        if isinstance(src, pd.DataFrame):
-            return src
-        raise TypeError('DataTransformService expects a DataFrame or an object with get_table()')
+    def _as_df(self, source):
+        if hasattr(source, "get_table"):
+            return source.get_table()
+        if isinstance(source, pd.DataFrame):
+            return source
+        raise TypeError("Expected a DataFrame or an object with get_table()")
 
-    def filter(self, _db, **kwargs):
+    def filter(self, source, **kwargs):
         """
         Example:
             filter(Platform="YouTube")
@@ -21,7 +19,7 @@ class DataTransformService:
             filter(Title__regex=r"^.*(challenge|vlog).*$")
         """
 
-        df = self._as_df(_db)
+        df = self._as_df(source)
 
         for column, value in kwargs.items():
             if column not in df.columns:
@@ -50,14 +48,14 @@ class DataTransformService:
         return df
 
 
-    def sort(self, _db, by, ascending=False):
+    def sort(self, source, by, ascending=False):
         """
         Example:
             sort("Views")
             sort("Subscribers")
         """
 
-        df = self._as_df(_db)
+        df = self._as_df(source)
 
         if by not in df.columns:
             raise ValueError(f"'{by}' is not possible to sort")

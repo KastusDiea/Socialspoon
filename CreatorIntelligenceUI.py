@@ -1,15 +1,27 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
-import pandas as pd
 from DataTransformService import DataTransformService
 from CSVExportService import CSVExporter
 from DataService import CreatorData, Platform, Video
+from CreatorTableService import creators_to_dataframe
+from DbPullService import DbPullService
+from instagram_api import InstagramApiService
+
+
 class CreatorIntelligence:
-    def __init__(self, creator_db, api_service=None, transform=None, exporter=None):
+    def __init__(self, creator_db, api_service=None, transform=None, exporter=None, db_pull_service=None, instagram_api_service=None):
         self.creator_db = creator_db if creator_db is not None else []
         self.api = api_service
         self.transform = transform or DataTransformService()
         self.exporter = exporter
+        self.db_pull_service = db_pull_service or DbPullService(
+            api_service=self.api,
+        )
+        self.instagram_api = instagram_api_service or InstagramApiService(
+            save_callback=self.db_pull_service.save_data,
+            data_provider=lambda: self.creator_db,
+        )
+        self.db_pull_service.api_services["Instagram"] = self.instagram_api
         self.root = None
         self.table = None
         self.status = None
@@ -22,7 +34,7 @@ class CreatorIntelligence:
             self.records = []
             return
 
-        self.api_key = tk.StringVar(); self.keyword = tk.StringVar(); self.creator_name = tk.StringVar(); self.youtube = tk.BooleanVar(value=True); self.instagram = tk.BooleanVar(value=True); self.tiktok = tk.BooleanVar(value=True)
+        self.api_key = tk.StringVar(value=self.db_pull_service.api_key); self.keyword = tk.StringVar(); self.creator_name = tk.StringVar(); self.youtube = tk.BooleanVar(value=True); self.instagram = tk.BooleanVar(value=True); self.tiktok = tk.BooleanVar(value=True)
         self.sort_column = None; self.sort_reverse = False
         self.columns = ["Platform","Creator","Subscribers","Title","Views","Likes","Upload Date"]
         self.build_ui()
@@ -38,7 +50,9 @@ class CreatorIntelligence:
         creator_frame=tk.Frame(self.root); creator_frame.pack(fill="x",padx=10,pady=5)
         tk.Label(creator_frame,text="Creator:").pack(side="left")
         tk.Entry(creator_frame,textvariable=self.creator_name,width=30).pack(side="left",padx=5)
-        tk.Button(creator_frame,text="Load Creator",command=self.load_creator_data).pack(side="left")
+        self.creator_platform = tk.StringVar(value="YouTube")
+        ttk.Combobox(creator_frame,textvariable=self.creator_platform,values=("YouTube", "Instagram"),state="readonly",width=12).pack(side="left",padx=5)
+        tk.Button(creator_frame,text="Lade die letzten 10 Videos von dem Creator",command=self.load_creator_data).pack(side="left")
         f=tk.Frame(self.root); f.pack(fill="x",padx=10,pady=5)
         tk.Checkbutton(f,text="YouTube",variable=self.youtube,command=self.filter).pack(side="left")
         tk.Checkbutton(f,text="Instagram",variable=self.instagram,command=self.filter).pack(side="left")
@@ -51,21 +65,12 @@ class CreatorIntelligence:
         self.table.pack(side="left",fill="both",expand=True)
         sb=ttk.Scrollbar(tf,orient="vertical",command=self.table.yview); sb.pack(side="right",fill="y"); self.table.configure(yscrollcommand=sb.set)
         b=tk.Frame(self.root); b.pack(fill="x",padx=10,pady=10); self.status=tk.Label(b,text=""); self.status.pack(side="left")
+        tk.Button(b,text="Daten Aktualisieren",command=self.refresh_data).pack(side="right", padx=5)
         tk.Button(b,text="Export Current Table to CSV",command=self.export_csv).pack(side="right")
 
 
     def _to_dataframe(self):
-        rows=[]
-        for c in self.creator_db:
-            p=getattr(c,'platform',None)
-            pname = p.get_name() if p and hasattr(p,'get_name') else str(p or '')
-            vids = getattr(c,'videos',[]) or []
-            if not vids:
-                rows.append({'Platform':pname,'Creator':getattr(c,'name',''),'Subscribers':getattr(c,'subscribers',''),'Title':'','Views':None,'Likes':None,'Upload Date':''})
-            else:
-                for v in vids:
-                    rows.append({'Platform':pname,'Creator':getattr(c,'name',''),'Subscribers':getattr(c,'subscribers',''),'Title':getattr(v,'title',''),'Views':getattr(v,'views',None),'Likes':getattr(v,'likes',None),'Upload Date':getattr(v,'upload_date','')})
-        return pd.DataFrame(rows)
+        return creators_to_dataframe(self.creator_db)
 
 
     
@@ -108,6 +113,7 @@ class CreatorIntelligence:
         k=self.api_key.get().strip();
         if self.api: 
             try:
+                self.db_pull_service.save_api_key(k)
                 self.api.set_yt_api_key(k)
                 self.status.config(text="YouTube API key set") if self.status else None
             except Exception:
@@ -115,7 +121,9 @@ class CreatorIntelligence:
                     self.status.config(text="Failed to set API key")
 
     def load_creator_data(self):
-        if self.api is None:
+        platform_name = self.creator_platform.get()
+        selected_api = self.api if platform_name == "YouTube" else self.instagram_api
+        if selected_api is None:
             if self.status:
                 self.status.config(text="No API service configured")
             return
@@ -126,39 +134,63 @@ class CreatorIntelligence:
                 self.status.config(text="Please enter a creator name")
             return
 
-        api_key = self.api_key.get().strip()
-        if api_key:
-            self.api.set_yt_api_key(api_key)
+        api_key_value = ""
+        if platform_name == "YouTube":
+            api_key = self.api_key.get().strip()
+            if api_key:
+                self.db_pull_service.save_api_key(api_key)
+                self.api.set_yt_api_key(api_key)
 
-        api_key_value = getattr(self.api, "youtubeAPIKey", None)
-        if api_key_value is None:
-            api_key_value = getattr(self.api, "key", None)
+            api_key_value = getattr(self.api, "youtubeAPIKey", None)
+            if api_key_value is None:
+                api_key_value = getattr(self.api, "key", None)
 
-        if not api_key_value:
-            if self.status:
-                self.status.config(text="YouTube API key is required")
-            return
+            if not api_key_value:
+                if self.status:
+                    self.status.config(text="YouTube API key is required")
+                return
 
         try:
-            platform = Platform("YouTube", api_key_value)
+            platform = Platform(platform_name, api_key_value)
             creator = CreatorData(creator_name, platform)
-            creator_data = self.api.getRecentVideos(platform, creator)
+            creator_data = selected_api.getRecentVideos(platform, creator)
 
-            if not any(getattr(item, "name", None) == creator_name and getattr(item, "platform", None) and getattr(item.platform, "get_name", lambda: "")() == "YouTube" for item in self.creator_db):
+            if not any(getattr(item, "name", None) == creator_name and getattr(item, "platform", None) and getattr(item.platform, "get_name", lambda: "")() == platform_name for item in self.creator_db):
                 self.creator_db.append(creator_data)
             else:
                 for idx, existing in enumerate(self.creator_db):
-                    if getattr(existing, "name", None) == creator_name and getattr(existing, "platform", None) and getattr(existing.platform, "get_name", lambda: "")() == "YouTube":
+                    if getattr(existing, "name", None) == creator_name and getattr(existing, "platform", None) and getattr(existing.platform, "get_name", lambda: "")() == platform_name:
                         self.creator_db[idx] = creator_data
                         break
 
+            self.db_pull_service.save_data(self.creator_db)
             self.records = self._to_dataframe().to_dict(orient='records')
             self.filter()
             if self.status:
-                self.status.config(text=f"Loaded {creator_name} from YouTube")
+                service_status = getattr(selected_api, "last_status", "")
+                status = f"Loaded {creator_name} from {platform_name}"
+                if service_status:
+                    status = f"{status}: {service_status}"
+                self.status.config(text=status)
         except Exception as exc:
             if self.status:
                 self.status.config(text=f"Error: {exc}")
+
+    def refresh_data(self):
+        if self.api is None:
+            if self.status:
+                self.status.config(text="No API service configured")
+            return
+
+        try:
+            refreshed = self.db_pull_service.refresh_data()
+            self.creator_db[:] = refreshed
+            self.filter()
+            if self.status:
+                self.status.config(text=f"Updated {len(refreshed)} creators")
+        except Exception as exc:
+            if self.status:
+                self.status.config(text=f"Error refreshing data: {exc}")
 
     def export_csv(self):
         if not getattr(self,'records',None): return

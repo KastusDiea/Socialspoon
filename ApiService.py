@@ -1,7 +1,7 @@
-import requests
 import time
+import requests
 
-from DataService import *
+from DataService import CreatorData, Video
 
 class ApiService:
 
@@ -17,7 +17,6 @@ class ApiService:
         Returns a CreatorData object.
         """
 
-        # Error checks
         if self.youtubeAPIKey is None:
             raise ValueError("YouTube API key is missing")
         if platform is None:
@@ -28,7 +27,6 @@ class ApiService:
             raise ValueError("Only YouTube is currently supported")
 
 
-        # Get channel ID
         channel_id = self.get_channel_id(
             creator_name.get_name()
         )
@@ -36,24 +34,14 @@ class ApiService:
         if channel_id is None:
             raise Exception("Channel not found")
 
-        # Get subscriber count
         subscribers = self.get_subscriber_count(channel_id)
-
-
-        # Get videos
         videos = self.get_videos(channel_id)
-
-
-        # Create CreatorData object
-        creator_data = CreatorData(
+        return CreatorData(
             name=creator_name.get_name(),
             platform=platform,
             subscribers=subscribers,
             videos=videos
         )
-
-
-        return creator_data
 
     def get_channel_id(self, creator_name):
 

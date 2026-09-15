@@ -1,0 +1,7 @@
+- create mor integrety tests - done
+- Instagram Support
+- TikTok Support
+- Refresh Data by Video Title + creator - done
+- create custom columns 
+- save API Keys in a file -done
+- Filter filtert nicht nach Title
